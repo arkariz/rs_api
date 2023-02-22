@@ -63,8 +63,8 @@ class SystemRs:
         rs["Tindakan"] = rs["Tindakan"].astype(str)
         self.database_rs = rs
 
-    def inputDiagnosisCode(self, d1, d2, d3, d4):
-        input_diagnosis_list = [d1, d2, d3, d4]
+    def inputDiagnosisCode(self, diagnosis: list):
+        input_diagnosis_list = diagnosis
 
         diagnosis_list = []
         for i in input_diagnosis_list:
@@ -77,8 +77,8 @@ class SystemRs:
 
         self.diagnosis_code = diagnosis_code
 
-    def inputTindakanCode(self, t1, t2, t3, t4):
-        input_tindakan_list = [t1, t2, t3, t4]
+    def inputTindakanCode(self, tindakan: list):
+        input_tindakan_list = tindakan
 
         tindakan_list = []
         for i in input_tindakan_list:

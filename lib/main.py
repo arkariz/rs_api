@@ -1,15 +1,35 @@
-from typing import Union
+from typing import Union, List
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from rs import SystemRs
 
 app = FastAPI()
 
+class PrediksiRequest(BaseModel):
+    diagnosis: List[str]
+    tindakan: List[str]
+    subacute: str
+    chronic: str
+    sp: str
+    sr: str
+    si: str
+    sd: str
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
 
-
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
+@app.post("/prediksi")
+def prediksi(prediksiRequest: PrediksiRequest):
+    rs = SystemRs()
+    rs.inputDiagnosisCode(prediksiRequest.diagnosis)
+    rs.inputTindakanCode(prediksiRequest.tindakan)
+    rs.prediksi()
+    if rs.hasilPrediksi == "":
+        raise HTTPException(status_code=404, detail="Data tidak ditemukan")
+    else:
+        return {
+            "code": 200,
+            "data": {
+                "prediksi": rs.hasilPrediksi,
+                "jumlah": rs.jumlah
+            }
+        }
