@@ -20,7 +20,7 @@ class SystemRs:
     tarif_inacbg = ""
 
     def __init__(self):
-        file_exists = os.path.exists("data/rsdb.db")
+        file_exists = os.path.isfile("./data/rsdb.db")
         print(file_exists)
         if not file_exists:
             self.loadExcelToDb()
@@ -32,13 +32,7 @@ class SystemRs:
         conn = sqlite3.connect("data/rsdb.db")
 
         df = pd.read_excel("data/data.xlsx")
-        df.to_sql("data_rs", conn, if_exists="replace")
-        conn.execute(
-            """
-            create table rs_table as
-            select * from data_rs
-            """
-        )
+        df.to_sql("rs_table", conn, if_exists="replace")
         conn.close()
 
     def loadDatabse(self):
@@ -51,7 +45,7 @@ class SystemRs:
                 "NOKARTU",
                 "KELAS_RAWAT",
                 "SEX",
-                "lama dirawat",
+                "LAMA_DIRAWAT",
                 "UMUR_TAHUN",
                 "Diagnosis",
                 "Tindakan",
@@ -64,6 +58,24 @@ class SystemRs:
                 "SD",
                 "TARIF_INACBG",
                 "TARIF_RS",
+                "PROSEDUR_NON_BEDAH",
+                "PROSEDUR_BEDAH",
+                "KONSULTASI",
+                "TENAGA_AHLI",
+                "KEPERAWATAN",
+                "PENUNJANG",
+                "RADIOLOGI",
+                "LABORATORIUM",
+                "PELAYANAN_DARAH",
+                "REHABILITASI",
+                "KAMAR_AKOMODASI",
+                "RAWAT_INTENSIF",
+                "OBAT",
+                "ALKES",
+                "BMHP",
+                "SEWA_ALAT",
+                "OBAT_KRONIS",
+                "OBAT_KEMO"
             ]
         ]
 
@@ -136,3 +148,46 @@ class SystemRs:
             self.jumlah = str(jumlah)
             self.tarif_rs = str(tarif_rs)
             self.tarif_inacbg = str(tarif_inacbg)
+
+    def inputData(self, data):
+        sql = '''INSERT INTO rs_table(
+                NOKARTU,
+                KELAS_RAWAT,
+                SEX,
+                LAMA_DIRAWAT,
+                UMUR_TAHUN,
+                Diagnosis,
+                Tindakan,
+                INACBG,
+                SUBACUTE,
+                CHRONIC,
+                SP,
+                SR,
+                SI,
+                SD,
+                TARIF_INACBG,
+                TARIF_RS,
+                PROSEDUR_NON_BEDAH,
+                PROSEDUR_BEDAH,
+                KONSULTASI,
+                TENAGA_AHLI,
+                KEPERAWATAN,
+                PENUNJANG,
+                RADIOLOGI,
+                LABORATORIUM,
+                PELAYANAN_DARAH,
+                REHABILITASI,
+                KAMAR_AKOMODASI,
+                RAWAT_INTENSIF,
+                OBAT,
+                ALKES,
+                BMHP,
+                SEWA_ALAT,
+                OBAT_KRONIS,
+                OBAT_KEMO) 
+                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
+        conn = sqlite3.connect("data/rsdb.db")
+        cursor = conn.cursor()
+        cursor.execute(sql, data)
+        conn.commit()
+        conn.close()
