@@ -9,7 +9,9 @@ class SystemRs:
     diagnosis_code = ""
     tindakan_code = ""
     hasilPrediksi = ""
-    jumlah = 0
+    jumlah = ""
+    tarif_rs = ""
+    tarif_inacbg = ""
 
     def __init__(self):
         file_exists = os.path.exists("data/rsdb.db")
@@ -75,7 +77,7 @@ class SystemRs:
         if diagnosis_code == "":
             diagnosis_code = "-"
 
-        self.diagnosis_code = diagnosis_code
+        self.diagnosis_code = str(diagnosis_code)
 
     def inputTindakanCode(self, tindakan: list):
         input_tindakan_list = tindakan
@@ -89,7 +91,7 @@ class SystemRs:
         if tindakan_code == "":
             tindakan_code = "-"
 
-        self.tindakan_code = tindakan_code
+        self.tindakan_code = str(tindakan_code)
 
     def prediksi(self):
         find = self.database_rs.loc[
@@ -99,18 +101,18 @@ class SystemRs:
 
         if find.empty == False:
             tarif_inacbg = find["TARIF_INACBG"].iloc[0]
-            tarif_rs = find["TARIF_RS"].sum()
+            tarif_rs = find["TARIF_RS"].mean()
             prediksi = ""
             jumlah = 0
 
-            if tarif_rs > tarif_inacbg:
-                prediksi = "untung"
-                jumlah = tarif_rs - tarif_inacbg
-            else:
+            if tarif_inacbg < tarif_rs:
                 prediksi = "rugi"
-                jumlah = tarif_rs - tarif_inacbg
+                jumlah = tarif_inacbg - tarif_rs
+            else:
+                prediksi = "untung"
+                jumlah = tarif_inacbg - tarif_rs
 
             self.hasilPrediksi = prediksi
             self.jumlah = str(jumlah)
-            print(self.hasilPrediksi)
-            print(self.jumlah)
+            self.tarif_rs = str(tarif_rs)
+            self.tarif_inacbg = str(tarif_inacbg)

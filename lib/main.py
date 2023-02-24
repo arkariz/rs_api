@@ -30,6 +30,8 @@ def prediksi(prediksiRequest: PrediksiRequest):
             "code": 200,
             "data": {
                 "prediksi": rs.hasilPrediksi,
+                "tarif_rs": rs.tarif_rs,
+                "tarif_inacbg": rs.tarif_inacbg,
                 "jumlah": rs.jumlah
             }
         }
