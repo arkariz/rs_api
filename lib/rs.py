@@ -8,6 +8,12 @@ class SystemRs:
     database_rs = None
     diagnosis_code = ""
     tindakan_code = ""
+    chronic = ""
+    subacute = ""
+    sp = ""
+    sr = ""
+    si = ""
+    sd = ""
     hasilPrediksi = ""
     jumlah = ""
     tarif_rs = ""
@@ -92,11 +98,25 @@ class SystemRs:
             tindakan_code = "-"
 
         self.tindakan_code = str(tindakan_code)
+    
+    def inputSpecial(self, subacute, chronic, sp, sr, si, sd):
+        self.subacute = "-" if subacute == "" else subacute
+        self.chronic = "-" if chronic == "" else chronic
+        self.sp = "-" if sp == "" else sp
+        self.sr = "-" if sr == "" else sr
+        self.si = "-" if si == "" else si
+        self.sd = "-" if sd == "" else sd
 
     def prediksi(self):
         find = self.database_rs.loc[
             (self.database_rs["Diagnosis"] == self.diagnosis_code)
             & (self.database_rs["Tindakan"] == self.tindakan_code)
+            & (self.database_rs["SUBACUTE"] == self.subacute)
+            & (self.database_rs["CHRONIC"] == self.chronic)
+            & (self.database_rs["SP"] == self.sp)
+            & (self.database_rs["SR"] == self.sr)
+            & (self.database_rs["SI"] == self.si)
+            & (self.database_rs["SD"] == self.sd)
         ]
 
         if find.empty == False:

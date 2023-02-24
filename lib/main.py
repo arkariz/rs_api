@@ -22,6 +22,12 @@ def prediksi(prediksiRequest: PrediksiRequest):
     rs = SystemRs()
     rs.inputDiagnosisCode(prediksiRequest.diagnosis)
     rs.inputTindakanCode(prediksiRequest.tindakan)
+    rs.inputSpecial(prediksiRequest.subacute,
+                    prediksiRequest.chronic, 
+                    prediksiRequest.sp, 
+                    prediksiRequest.sr, 
+                    prediksiRequest.si, 
+                    prediksiRequest.sd)
     rs.prediksi()
     if rs.hasilPrediksi == "":
         raise HTTPException(status_code=404, detail="Data tidak ditemukan")
