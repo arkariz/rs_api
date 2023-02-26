@@ -9,3 +9,5 @@ micros:
       - "/docs"
       - "/prediksi"
       - "/input-data"
+    presets:
+      api_keys: true
