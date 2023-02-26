@@ -2,7 +2,7 @@ from typing import Union, List
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from rs import SystemRs
+from lib.rs import SystemRs
 
 app = FastAPI()
 
