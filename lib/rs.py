@@ -78,6 +78,7 @@ class SystemRs:
                 "OBAT_KEMO"
             ]
         ]
+        print(rs.iloc[-1])
 
         rs.fillna("-")
         rs["Tindakan"] = rs["Tindakan"].astype(str)
