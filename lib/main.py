@@ -15,7 +15,7 @@ import pickle
 app = FastAPI()
 
 class LamaRawatRequest(BaseModel):
-    diagnosis: str
+    diagnosis: List[str]
     umur: int
     sex: int
 
@@ -83,10 +83,22 @@ def prediksiLamaRawat(lamaRawatRequest: LamaRawatRequest):
     diag_list['DiagnosisTrans'] = diag_list['DiagnosisTrans'].cat.reorder_categories(diag_list['DiagnosisCAT'].unique(), ordered=True)
     diag_list['DiagnosisTrans'] = diag_list['DiagnosisTrans'].cat.codes
 
-    index = diag_list.index[diag_list['Diagnosis'] == lamaRawatRequest.diagnosis].to_list()
-    # print("tess" + index.c)
+    input_diagnosis_list = lamaRawatRequest.diagnosis
+
+    diagnosis_list = []
+    for i in input_diagnosis_list:
+        if i != "-":
+            diagnosis_list.append(i)
+
+    diagnosis_code = ";".join(diagnosis_list)
+    if diagnosis_code == "":
+        diagnosis_code = "-"
+
+    diagnosis_code = str(diagnosis_code)
+
+    index = diag_list.index[diag_list['Diagnosis'] == diagnosis_code].to_list()
     if index.__len__() !=0:
-        requestDiagnosis = diag_list.iloc[index]
+        requestDiagnosis = diag_list.iloc[index[0]]
 
         data = [[requestDiagnosis['DiagnosisTrans'], lamaRawatRequest.sex, lamaRawatRequest.umur]]
         data = pd.DataFrame(data, columns=['Diagnosis', 'SEX', 'UMUR_TAHUN'])
