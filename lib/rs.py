@@ -32,6 +32,8 @@ class SystemRs:
         conn = sqlite3.connect("data/rsdb.db")
 
         df = pd.read_excel("data/data.xlsx")
+        df['Tindakan'] = df['Tindakan'].fillna('-')
+
         df.to_sql("rs_table", conn, if_exists="replace")
         conn.close()
 
