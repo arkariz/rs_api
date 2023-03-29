@@ -8,6 +8,8 @@ import keras
 import pandas as pd
 import math
 import pickle
+import uvicorn
+from sklearn.preprocessing import StandardScaler
 
 
 
@@ -68,6 +70,7 @@ class InputDataRequest(BaseModel):
 
 @app.post("/prediksi-lama-rawat")
 def prediksiLamaRawat(lamaRawatRequest: LamaRawatRequest):
+    StandardScaler()
     with open('data/predictorScaler.pkl', 'rb') as file:
         predictorScaler = pickle.load(file)
     
@@ -186,3 +189,5 @@ def inputData(inputData: InputDataRequest):
         ]
     rs.inputData(data=data)
 
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8080)
