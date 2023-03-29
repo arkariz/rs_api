@@ -4,12 +4,15 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 from rs import SystemRs
+from nn import NeuralNetwork
 import keras
 import pandas as pd
 import math
 import pickle
 import uvicorn
 from sklearn.preprocessing import StandardScaler
+import sqlite3
+import random
 
 
 
@@ -18,6 +21,7 @@ app = FastAPI()
 
 class LamaRawatRequest(BaseModel):
     diagnosis: List[str]
+    tindakan: List[str]
     umur: int
     sex: int
 
@@ -67,6 +71,16 @@ class InputDataRequest(BaseModel):
     OBAT_KRONIS: int
     OBAT_KEMO: int
     
+@app.get("/create-model")
+def createModel():
+    nn = NeuralNetwork()
+    nn.createModel()
+    return {
+        "code": 200,
+        "data": {
+            "message": "ok"
+        }
+    }
 
 @app.post("/prediksi-lama-rawat")
 def prediksiLamaRawat(lamaRawatRequest: LamaRawatRequest):
@@ -77,14 +91,21 @@ def prediksiLamaRawat(lamaRawatRequest: LamaRawatRequest):
     with open('data/targerScaler.pkl', 'rb') as file:
         targerScaler = pickle.load(file)
 
-    model = keras.models.load_model('data/model.h5')
-    diag_list = pd.read_excel('data/data.xlsx')
-    diag_list = diag_list[['Diagnosis']]
+    conn = sqlite3.connect("data/rsdb.db")
+    df = pd.read_sql_query("SELECT * from rs_table", conn)
+    conn.close()
 
-    diag_list['DiagnosisCAT'] = diag_list
-    diag_list['DiagnosisTrans'] = diag_list['DiagnosisCAT'].astype('category')
-    diag_list['DiagnosisTrans'] = diag_list['DiagnosisTrans'].cat.reorder_categories(diag_list['DiagnosisCAT'].unique(), ordered=True)
-    diag_list['DiagnosisTrans'] = diag_list['DiagnosisTrans'].cat.codes
+    model = keras.models.load_model('data/model.h5')
+
+    df['DiagnosisCAT'] = df['Diagnosis']
+    df['DiagnosisTrans'] = df['DiagnosisCAT'].astype('category')
+    df['DiagnosisTrans'] = df['DiagnosisTrans'].cat.reorder_categories(df['DiagnosisCAT'].unique(), ordered=True)
+    df['DiagnosisTrans'] = df['DiagnosisTrans'].cat.codes
+
+    df['TindakanCAT'] = df['Tindakan']
+    df['TindakanTrans'] = df['TindakanCAT'].astype('category')
+    df['TindakanTrans'] = df['TindakanTrans'].cat.reorder_categories(df['TindakanCAT'].unique(), ordered=True)
+    df['TindakanTrans'] = df['TindakanTrans'].cat.codes
 
     input_diagnosis_list = lamaRawatRequest.diagnosis
 
@@ -99,28 +120,48 @@ def prediksiLamaRawat(lamaRawatRequest: LamaRawatRequest):
 
     diagnosis_code = str(diagnosis_code)
 
-    index = diag_list.index[diag_list['Diagnosis'] == diagnosis_code].to_list()
-    if index.__len__() !=0:
-        requestDiagnosis = diag_list.iloc[index[0]]
+    input_tindakan_list = lamaRawatRequest.tindakan
 
-        data = [[requestDiagnosis['DiagnosisTrans'], lamaRawatRequest.sex, lamaRawatRequest.umur]]
-        data = pd.DataFrame(data, columns=['Diagnosis', 'SEX', 'UMUR_TAHUN'])
+    tindakan_list = []
+    for i in input_tindakan_list:
+        if i != "-":
+            tindakan_list.append(i)
 
-        X = data[['Diagnosis', 'SEX', 'UMUR_TAHUN']].values
-        X = predictorScaler.transform(X)
+    tindakan_code = ";".join(tindakan_list)
+    if tindakan_code == "":
+        tindakan_code = "-"
 
-        prediction = model.predict(X)
-        prediction = targerScaler.inverse_transform(prediction)
-        prediction = prediction[0]
-        prediction = math.ceil(prediction)
-        return {
-            "code": 200,
-            "data": {
-                "prediksi": prediction
-            }
-        }
-    else:
+    tindakan_code = str(tindakan_code)
+
+    is_diagnosis_exist = df.loc[df['Diagnosis'] == diagnosis_code]['DiagnosisTrans'].to_list()
+    is_tindakan_exist = df.loc[df['Tindakan'] == tindakan_code]['TindakanTrans'].to_list()
+    if not is_diagnosis_exist:
         raise HTTPException(status_code=401, detail="Data tidak ditemukan")
+    
+    if not is_tindakan_exist:
+        raise HTTPException(status_code=401, detail="Data tidak ditemukan")
+
+    data = [[is_diagnosis_exist[0], is_tindakan_exist[0] ,lamaRawatRequest.sex, lamaRawatRequest.umur]]
+    data = pd.DataFrame(data, columns=['Diagnosis', 'Tindakan' ,'SEX', 'UMUR_TAHUN'])
+
+    X = data[['Diagnosis', 'Tindakan', 'SEX', 'UMUR_TAHUN']].values
+    X = predictorScaler.transform(X)
+
+    prediction = model.predict(X)
+    prediction = targerScaler.inverse_transform(prediction)
+    prediction = prediction[0]
+    
+    if random.randint(0, 1) == 0:
+        prediction = math.ceil(prediction)
+    else:
+        prediction = math.floor(prediction)
+
+    return {
+        "code": 200,
+        "data": {
+            "prediksi": prediction
+        }
+    }
 
 
 @app.post("/prediksi")
