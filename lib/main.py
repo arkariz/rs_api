@@ -71,16 +71,10 @@ class InputDataRequest(BaseModel):
     OBAT_KRONIS: int
     OBAT_KEMO: int
     
-@app.get("/create-model")
+
 def createModel():
     nn = NeuralNetwork()
     nn.createModel()
-    return {
-        "code": 200,
-        "data": {
-            "message": "ok"
-        }
-    }
 
 @app.post("/prediksi-lama-rawat")
 def prediksiLamaRawat(lamaRawatRequest: LamaRawatRequest):
@@ -229,6 +223,13 @@ def inputData(inputData: InputDataRequest):
             inputData.OBAT_KEMO
         ]
     rs.inputData(data=data)
+    createModel()
+    return {
+        "code": 200,
+        "data": {
+            "message": "ok"
+        }
+    }
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8080)
