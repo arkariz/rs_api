@@ -70,14 +70,10 @@ class InputDataRequest(BaseModel):
     SEWA_ALAT: int
     OBAT_KRONIS: int
     OBAT_KEMO: int
-    
-
-def createModel():
-    nn = NeuralNetwork()
-    nn.createModel()
 
 @app.post("/prediksi-lama-rawat")
 def prediksiLamaRawat(lamaRawatRequest: LamaRawatRequest):
+    SystemRs()
     StandardScaler()
     with open('data/predictorScaler.pkl', 'rb') as file:
         predictorScaler = pickle.load(file)
@@ -182,6 +178,17 @@ def prediksi(prediksiRequest: PrediksiRequest):
                 "jumlah": rs.jumlah
             }
         }
+    
+@app.get("/create-model")
+def createModel():
+    SystemRs()
+    nn = NeuralNetwork()
+    ape, mse = nn.createModel()
+    return {
+        "code": 200,
+        "ape": ape,
+        "mse": mse,
+    }
 
 @app.post("/input-data")
 def inputData(inputData: InputDataRequest):
@@ -223,7 +230,6 @@ def inputData(inputData: InputDataRequest):
             inputData.OBAT_KEMO
         ]
     rs.inputData(data=data)
-    createModel()
     return {
         "code": 200,
         "data": {
