@@ -22,12 +22,14 @@ app = FastAPI()
 class LamaRawatRequest(BaseModel):
     diagnosis: List[str]
     tindakan: List[str]
+    kelasrawat: int
     umur: int
     sex: int
 
 class PrediksiRequest(BaseModel):
     diagnosis: List[str]
     tindakan: List[str]
+    kelasrawat: int
     subacute: str
     chronic: str
     sp: str
@@ -131,10 +133,10 @@ def prediksiLamaRawat(lamaRawatRequest: LamaRawatRequest):
     if not is_tindakan_exist:
         raise HTTPException(status_code=401, detail="Data tidak ditemukan")
 
-    data = [[is_diagnosis_exist[0], is_tindakan_exist[0] ,lamaRawatRequest.sex, lamaRawatRequest.umur]]
-    data = pd.DataFrame(data, columns=['Diagnosis', 'Tindakan' ,'SEX', 'UMUR_TAHUN'])
+    data = [[is_diagnosis_exist[0], is_tindakan_exist[0] ,lamaRawatRequest.sex, lamaRawatRequest.umur, lamaRawatRequest.kelasrawat]]
+    data = pd.DataFrame(data, columns=['Diagnosis', 'Tindakan' ,'SEX', 'UMUR_TAHUN', 'KELAS_RAWAT'])
 
-    X = data[['Diagnosis', 'Tindakan', 'SEX', 'UMUR_TAHUN']].values
+    X = data[['Diagnosis', 'Tindakan', 'SEX', 'UMUR_TAHUN', 'KELAS_RAWAT']].values
     X = predictorScaler.transform(X)
 
     prediction = model.predict(X)
@@ -157,6 +159,7 @@ def prediksiLamaRawat(lamaRawatRequest: LamaRawatRequest):
 @app.post("/prediksi")
 def prediksi(prediksiRequest: PrediksiRequest):
     rs = SystemRs()
+    rs.kelas_rawat = prediksiRequest.kelasrawat
     rs.inputDiagnosisCode(prediksiRequest.diagnosis)
     rs.inputTindakanCode(prediksiRequest.tindakan)
     rs.inputSpecial(prediksiRequest.subacute,

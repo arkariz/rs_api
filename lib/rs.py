@@ -8,6 +8,7 @@ class SystemRs:
     database_rs = None
     diagnosis_code = ""
     tindakan_code = ""
+    kelas_rawat = ""
     chronic = ""
     subacute = ""
     sp = ""
@@ -126,6 +127,7 @@ class SystemRs:
         find = self.database_rs.loc[
             (self.database_rs["Diagnosis"] == self.diagnosis_code)
             & (self.database_rs["Tindakan"] == self.tindakan_code)
+            & (self.database_rs["KELAS_RAWAT"] == self.kelas_rawat)
             & (self.database_rs["SUBACUTE"] == self.subacute)
             & (self.database_rs["CHRONIC"] == self.chronic)
             & (self.database_rs["SP"] == self.sp)

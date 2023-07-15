@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 import pickle
 import sqlite3
-from sklearn.model_selection import train_test_split
 
 # Data preprocessing
 from sklearn.preprocessing import StandardScaler
@@ -18,7 +17,7 @@ class NeuralNetwork:
         df = pd.read_sql_query("SELECT * from rs_table", conn)
         conn.close()
 
-        df = df[['Diagnosis', 'Tindakan', 'SEX', 'UMUR_TAHUN', 'LAMA_DIRAWAT']]
+        df = df[['Diagnosis', 'Tindakan', 'SEX', 'UMUR_TAHUN', 'LAMA_DIRAWAT', 'KELAS_RAWAT']]
 
         df['DiagnosisCAT'] = df['Diagnosis']
         df['Diagnosis'] = df['DiagnosisCAT'].astype('category')
@@ -32,7 +31,7 @@ class NeuralNetwork:
 
         df.dropna(axis=0, inplace=True)
 
-        X = df[['Diagnosis', 'Tindakan', 'SEX', 'UMUR_TAHUN']].values
+        X = df[['Diagnosis', 'Tindakan', 'SEX', 'UMUR_TAHUN', 'KELAS_RAWAT']].values
         y = df[['LAMA_DIRAWAT']].values
         
         ### Sandardization of data ###
@@ -52,13 +51,22 @@ class NeuralNetwork:
         # # Generating the standardized values of X and y
         X=PredictorScalerFit.transform(X)
         y=TargetVarScalerFit.transform(y)
-        
+
         # Split the data into training and testing set
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+        X = pd.DataFrame(X)
+        y = pd.DataFrame(y)
+
+        X_train = X.sample(frac=0.8, random_state=25)
+        X_test = X.drop(X_train.index).values
+        X_train = X_train.values
+
+        y_train = y.sample(frac=0.8, random_state=25)
+        y_test = y.drop(y_train.index).values
+        y_train.values
         
         model = Sequential()
         # Defining the first layer of the model
-        model.add(Dense(units=4, input_shape=(4,), kernel_initializer='normal', activation='relu'))
+        model.add(Dense(units=5, input_shape=(5,), kernel_initializer='normal', activation='relu'))
 
         # Defining the Second layer of the model
         model.add(Dense(units=60, kernel_initializer='normal', activation='relu'))
@@ -90,7 +98,7 @@ class NeuralNetwork:
         # Scaling the test data back to original scale
         Test_Data=PredictorScalerFit.inverse_transform(X_test)
         
-        TestingData=pd.DataFrame(data=Test_Data, columns=['Diagnosis', 'Tindakan', 'SEX', 'UMUR_TAHUN'])
+        TestingData=pd.DataFrame(data=Test_Data, columns=['Diagnosis', 'Tindakan', 'SEX', 'UMUR_TAHUN', 'KELAS_RAWAT'])
         TestingData['LAMA_DIRAWAT']=y_test_orig
         TestingData['PRED']=Predictions
         TestingData.head()
