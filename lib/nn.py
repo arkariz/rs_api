@@ -10,6 +10,7 @@ from sklearn.preprocessing import StandardScaler
 # Neural Net modules
 from keras.models import Sequential
 from keras.layers import Dense
+from keras.optimizers import Adam
 
 class NeuralNetwork:
     def createModel(self):
@@ -79,10 +80,11 @@ class NeuralNetwork:
         model.add(Dense(1, kernel_initializer='normal', activation='linear'))
 
         # Compiling the model
-        model.compile(loss='mean_squared_error', optimizer='adam')
+        optimizer = Adam(learning_rate=0.01)
+        model.compile(loss='mean_squared_error', optimizer=optimizer)
 
         # Fitting the ANN to the Training set
-        model.fit(X_train, y_train ,batch_size = 200, epochs = 500, verbose=0)
+        model.fit(X_train, y_train ,batch_size = 64, epochs = 200, verbose=0)
         
         model.save("data/model.h5")
 
