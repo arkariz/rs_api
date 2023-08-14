@@ -1,4 +1,5 @@
 # General data analysis/plotting
+import os
 import numpy as np
 import pandas as pd
 import pickle
@@ -18,7 +19,7 @@ class NeuralNetwork:
         df = pd.read_sql_query("SELECT * from rs_table", conn)
         conn.close()
 
-        df = df[['Diagnosis', 'Tindakan', 'SEX', 'UMUR_TAHUN', 'LAMA_DIRAWAT', 'KELAS_RAWAT']]
+        df = df[['Diagnosis', 'Tindakan', 'SEX', 'UMUR_TAHUN', 'LAMA_DIRAWAT', 'INACBG', 'HARI']]
 
         df['DiagnosisCAT'] = df['Diagnosis']
         df['Diagnosis'] = df['DiagnosisCAT'].astype('category')
@@ -30,9 +31,25 @@ class NeuralNetwork:
         df['Tindakan'] = df['Tindakan'].cat.reorder_categories(df['TindakanCAT'].unique(), ordered=True)
         df['Tindakan'] = df['Tindakan'].cat.codes
 
+        df['HARICAT'] = df['HARI']
+        df['HARI'] = df['HARICAT'].astype('category')
+        df['HARI'] = df['HARI'].cat.reorder_categories(df['HARICAT'].unique(), ordered=True)
+        df['HARI'] = df['HARI'].cat.codes
+
+        severity = []
+        for index, row in df.iterrows():
+            if row['INACBG'].split("-")[-1] == "I":
+                severity.append(1)
+            elif row['INACBG'].split("-")[-1] == "II":
+                severity.append(2)
+            else:
+                severity.append(3)
+
+        df['Severity'] = severity
+
         df.dropna(axis=0, inplace=True)
 
-        X = df[['Diagnosis', 'Tindakan', 'SEX', 'UMUR_TAHUN', 'KELAS_RAWAT']].values
+        X = df[['Diagnosis', 'Tindakan', 'SEX', 'UMUR_TAHUN', 'Severity', 'HARI']].values
         y = df[['LAMA_DIRAWAT']].values
         
         ### Sandardization of data ###
@@ -67,12 +84,12 @@ class NeuralNetwork:
         
         model = Sequential()
         # Defining the first layer of the model
-        model.add(Dense(units=5, input_shape=(5,), kernel_initializer='normal', activation='relu'))
+        model.add(Dense(units=6, input_shape=(6,), kernel_initializer='normal', activation='relu'))
 
         # Defining the Second layer of the model
         model.add(Dense(units=60, kernel_initializer='normal', activation='relu'))
         model.add(Dense(units=60, kernel_initializer='normal', activation='relu'))
-        model.add(Dense(units=5, kernel_initializer='normal', activation='relu'))
+        model.add(Dense(units=6, kernel_initializer='normal', activation='relu'))
 
 
         # The output neuron is a single fully connected node 
@@ -100,7 +117,7 @@ class NeuralNetwork:
         # Scaling the test data back to original scale
         Test_Data=PredictorScalerFit.inverse_transform(X_test)
         
-        TestingData=pd.DataFrame(data=Test_Data, columns=['Diagnosis', 'Tindakan', 'SEX', 'UMUR_TAHUN', 'KELAS_RAWAT'])
+        TestingData=pd.DataFrame(data=Test_Data, columns=['Diagnosis', 'Tindakan', 'SEX', 'UMUR_TAHUN', 'Severity', 'HARI'])
         TestingData['LAMA_DIRAWAT']=y_test_orig
         TestingData['PRED']=Predictions
         TestingData.head()

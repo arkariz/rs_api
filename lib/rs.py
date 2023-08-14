@@ -32,7 +32,7 @@ class SystemRs:
     def loadExcelToDb(self):
         conn = sqlite3.connect("data/rsdb.db")
 
-        df = pd.read_excel("data/data.xlsx")
+        df = pd.read_excel("data/data_clean.xlsx")
         df['Tindakan'] = df['Tindakan'].fillna('-')
 
         df.to_sql("rs_table", conn, if_exists="replace")
@@ -45,6 +45,8 @@ class SystemRs:
 
         rs = df[
             [
+                "TANGGAL_MASUK",
+                "HARI",
                 "NOKARTU",
                 "KELAS_RAWAT",
                 "SEX",
@@ -156,6 +158,8 @@ class SystemRs:
 
     def inputData(self, data):
         sql = '''INSERT INTO rs_table(
+                TANGGAL_MASUK,
+                HARI,
                 NOKARTU,
                 KELAS_RAWAT,
                 SEX,

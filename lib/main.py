@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Union, List
 
 from fastapi import FastAPI, HTTPException
@@ -22,9 +23,10 @@ app = FastAPI()
 class LamaRawatRequest(BaseModel):
     diagnosis: List[str]
     tindakan: List[str]
-    kelasrawat: int
+    hari: int
     umur: int
     sex: int
+    severity: int
 
 class PrediksiRequest(BaseModel):
     diagnosis: List[str]
@@ -38,6 +40,8 @@ class PrediksiRequest(BaseModel):
     sd: str
 
 class InputDataRequest(BaseModel):
+    TANGGAL_MASUK: datetime
+    HARI: int
     NOKARTU: str
     KELAS_RAWAT: int
     SEX: int
@@ -99,6 +103,22 @@ def prediksiLamaRawat(lamaRawatRequest: LamaRawatRequest):
     df['TindakanTrans'] = df['TindakanTrans'].cat.reorder_categories(df['TindakanCAT'].unique(), ordered=True)
     df['TindakanTrans'] = df['TindakanTrans'].cat.codes
 
+    df['HARICAT'] = df['HARI']
+    df['HARI'] = df['HARICAT'].astype('category')
+    df['HARI'] = df['HARI'].cat.reorder_categories(df['HARICAT'].unique(), ordered=True)
+    df['HARI'] = df['HARI'].cat.codes
+
+    severity = []
+    for index, row in df.iterrows():
+        if row['INACBG'].split("-")[-1] == "I":
+            severity.append(1)
+        elif row['INACBG'].split("-")[-1] == "II":
+            severity.append(2)
+        else:
+            severity.append(3)
+
+    df['Severity'] = severity
+
     input_diagnosis_list = lamaRawatRequest.diagnosis
 
     diagnosis_list = []
@@ -133,10 +153,10 @@ def prediksiLamaRawat(lamaRawatRequest: LamaRawatRequest):
     if not is_tindakan_exist:
         raise HTTPException(status_code=401, detail="Data tidak ditemukan")
 
-    data = [[is_diagnosis_exist[0], is_tindakan_exist[0] ,lamaRawatRequest.sex, lamaRawatRequest.umur, lamaRawatRequest.kelasrawat]]
-    data = pd.DataFrame(data, columns=['Diagnosis', 'Tindakan' ,'SEX', 'UMUR_TAHUN', 'KELAS_RAWAT'])
+    data = [[is_diagnosis_exist[0], is_tindakan_exist[0] ,lamaRawatRequest.sex, lamaRawatRequest.umur, lamaRawatRequest.severity, LamaRawatRequest.hari]]
+    data = pd.DataFrame(data, columns=['Diagnosis', 'Tindakan' ,'SEX', 'UMUR_TAHUN', 'Severity', 'HARI'])
 
-    X = data[['Diagnosis', 'Tindakan', 'SEX', 'UMUR_TAHUN', 'KELAS_RAWAT']].values
+    X = data[['Diagnosis', 'Tindakan', 'SEX', 'UMUR_TAHUN', 'Severity', 'HARI']].values
     X = predictorScaler.transform(X)
 
     prediction = model.predict(X)
@@ -197,6 +217,8 @@ def createModel():
 def inputData(inputData: InputDataRequest):
     rs = SystemRs()
     data = [
+            inputData.TANGGAL_MASUK,
+            inputData.HARI,
             inputData.NOKARTU,
             inputData.KELAS_RAWAT,
             inputData.SEX,
