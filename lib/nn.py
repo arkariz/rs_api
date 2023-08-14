@@ -97,11 +97,11 @@ class NeuralNetwork:
         model.add(Dense(1, kernel_initializer='normal', activation='linear'))
 
         # Compiling the model
-        optimizer = Adam(learning_rate=0.01)
+        optimizer = Adam(learning_rate=0.001)
         model.compile(loss='mean_squared_error', optimizer=optimizer)
 
         # Fitting the ANN to the Training set
-        model.fit(X_train, y_train ,batch_size = 64, epochs = 200, verbose=0)
+        model.fit(X_train, y_train ,batch_size = 64, epochs = 100, verbose=0)
         
         model.save("data/model.h5")
 

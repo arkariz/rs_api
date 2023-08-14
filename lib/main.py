@@ -40,8 +40,6 @@ class PrediksiRequest(BaseModel):
     sd: str
 
 class InputDataRequest(BaseModel):
-    TANGGAL_MASUK: datetime
-    HARI: int
     NOKARTU: str
     KELAS_RAWAT: int
     SEX: int
@@ -103,11 +101,6 @@ def prediksiLamaRawat(lamaRawatRequest: LamaRawatRequest):
     df['TindakanTrans'] = df['TindakanTrans'].cat.reorder_categories(df['TindakanCAT'].unique(), ordered=True)
     df['TindakanTrans'] = df['TindakanTrans'].cat.codes
 
-    df['HARICAT'] = df['HARI']
-    df['HARI'] = df['HARICAT'].astype('category')
-    df['HARI'] = df['HARI'].cat.reorder_categories(df['HARICAT'].unique(), ordered=True)
-    df['HARI'] = df['HARI'].cat.codes
-
     severity = []
     for index, row in df.iterrows():
         if row['INACBG'].split("-")[-1] == "I":
@@ -153,7 +146,7 @@ def prediksiLamaRawat(lamaRawatRequest: LamaRawatRequest):
     if not is_tindakan_exist:
         raise HTTPException(status_code=401, detail="Data tidak ditemukan")
 
-    data = [[is_diagnosis_exist[0], is_tindakan_exist[0] ,lamaRawatRequest.sex, lamaRawatRequest.umur, lamaRawatRequest.severity, LamaRawatRequest.hari]]
+    data = [[is_diagnosis_exist[0], is_tindakan_exist[0] ,lamaRawatRequest.sex, lamaRawatRequest.umur, lamaRawatRequest.severity, lamaRawatRequest.hari]]
     data = pd.DataFrame(data, columns=['Diagnosis', 'Tindakan' ,'SEX', 'UMUR_TAHUN', 'Severity', 'HARI'])
 
     X = data[['Diagnosis', 'Tindakan', 'SEX', 'UMUR_TAHUN', 'Severity', 'HARI']].values
@@ -216,9 +209,14 @@ def createModel():
 @app.post("/input-data")
 def inputData(inputData: InputDataRequest):
     rs = SystemRs()
+    
+    dateTime = datetime.now()
+    tanggal_masuk = dateTime.strftime('%Y-%m-%d')
+    hari = dateTime.strftime('%A')
+
     data = [
-            inputData.TANGGAL_MASUK,
-            inputData.HARI,
+            tanggal_masuk,
+            hari,
             inputData.NOKARTU,
             inputData.KELAS_RAWAT,
             inputData.SEX,
